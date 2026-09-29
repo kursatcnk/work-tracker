@@ -1,0 +1,72 @@
+<Window x:Class="GorevTakip.Views.AlarmWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Hatırlatma" Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="True" ShowActivated="True"
+        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI" UseLayoutRounding="True"
+        Foreground="{StaticResource Text}">
+  <Grid Margin="18">
+    <!-- yanıp sönen dış çerçeve -->
+    <Border x:Name="Glow" CornerRadius="16" BorderThickness="3" BorderBrush="{StaticResource Warning}" Margin="-3"/>
+
+    <Border Background="{StaticResource Surface}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1">
+      <Border.Effect>
+        <DropShadowEffect BlurRadius="28" ShadowDepth="0" Opacity="0.7" Color="Black"/>
+      </Border.Effect>
+      <StackPanel Margin="24,20,24,22">
+        <Grid>
+          <StackPanel Orientation="Horizontal">
+            <Border Width="44" Height="44" CornerRadius="22" Background="{StaticResource WarningSoft}">
+              <TextBlock Text="&#xEA8F;" FontFamily="{StaticResource Icons}" FontSize="22"
+                         Foreground="{StaticResource Warning}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                         RenderTransformOrigin="0.5,0.2">
+                <TextBlock.RenderTransform>
+                  <RotateTransform x:Name="BellRotate"/>
+                </TextBlock.RenderTransform>
+              </TextBlock>
+            </Border>
+            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="HATIRLATMA" FontWeight="Bold" Foreground="{StaticResource Warning}" FontSize="12"/>
+              <TextBlock x:Name="TimeText" Foreground="{StaticResource TextMuted}" FontSize="12.5" Margin="0,2,0,0"/>
+            </StackPanel>
+          </StackPanel>
+          <Button x:Name="MuteButton" HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource GhostBtn}"
+                  Padding="8,6" Click="Mute_Click" ToolTip="Sesi kapat">
+            <TextBlock x:Name="MuteIcon" Text="&#xE767;" FontFamily="{StaticResource Icons}" FontSize="15"/>
+          </Button>
+        </Grid>
+
+        <TextBlock x:Name="TitleText" FontSize="21" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,18,0,0"/>
+
+        <Border x:Name="NoteBorder" Background="{StaticResource Surface2}" CornerRadius="8" Padding="14,12" Margin="0,12,0,0">
+          <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
+            <TextBlock x:Name="NoteText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20"/>
+          </ScrollViewer>
+        </Border>
+
+        <TextBlock Text="Ertele" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,18,0,8"/>
+        <UniformGrid Columns="4">
+          <Button Tag="10" Click="Snooze_Click" Content="10 dk" Margin="0,0,6,0"/>
+          <Button Tag="30" Click="Snooze_Click" Content="30 dk" Margin="0,0,6,0"/>
+          <Button Tag="60" Click="Snooze_Click" Content="1 saat" Margin="0,0,6,0"/>
+          <Button Tag="tomorrow" Click="Snooze_Click" Content="Yarın 09:00"/>
+        </UniformGrid>
+
+        <Grid Margin="0,16,0,0">
+          <StackPanel Orientation="Horizontal">
+            <Button Content="Kapat" Style="{StaticResource GhostBtn}" Click="Dismiss_Click"
+                    ToolTip="Uyarıyı kapat (not aktif kalır)"/>
+            <Button Content="Düzenle / yeni tarih" Style="{StaticResource GhostBtn}" Click="Edit_Click" Margin="4,0,0,0"/>
+          </StackPanel>
+          <Button HorizontalAlignment="Right" Style="{StaticResource SuccessBtn}" Click="Complete_Click" Padding="18,8">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE73E;" FontFamily="{StaticResource Icons}" FontSize="12" VerticalAlignment="Center" Margin="0,1,8,0"/>
+              <TextBlock Text="Tamamlandı"/>
+            </StackPanel>
+          </Button>
+        </Grid>
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

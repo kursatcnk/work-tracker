@@ -5,15 +5,234 @@
         Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
         FontFamily="Segoe UI" UseLayoutRounding="True"
         WindowStartupLocation="CenterScreen">
+
+  <Window.InputBindings>
+    <KeyBinding Key="N" Modifiers="Control" Command="New"/>
+    <KeyBinding Key="F" Modifiers="Control" Command="Find"/>
+  </Window.InputBindings>
+  <Window.CommandBindings>
+    <CommandBinding Command="New" Executed="NewCommand_Executed"/>
+    <CommandBinding Command="Find" Executed="FindCommand_Executed"/>
+  </Window.CommandBindings>
+
+  <Window.Resources>
+
+    <!-- kartın sağ tık menüsü. x:Shared=False şart, yoksa tüm kartlar aynı menü nesnesini paylaşıyor -->
+    <ContextMenu x:Key="ItemMenu" x:Shared="False">
+      <MenuItem Click="MenuToggleComplete_Click">
+        <MenuItem.Icon>
+          <TextBlock Text="&#xE73E;" Style="{StaticResource MenuIcon}" Foreground="{StaticResource Success}"/>
+        </MenuItem.Icon>
+        <MenuItem.Style>
+          <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Header" Value="Tamamlandı olarak işaretle"/>
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                <Setter Property="Header" Value="Geri al (tekrar aktif yap)"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </MenuItem.Style>
+      </MenuItem>
+      <MenuItem Header="Düzenle" InputGestureText="Çift tık" Click="MenuEdit_Click">
+        <MenuItem.Icon>
+          <TextBlock Text="&#xE70F;" Style="{StaticResource MenuIcon}"/>
+        </MenuItem.Icon>
+      </MenuItem>
+      <MenuItem Click="MenuReminder_Click">
+        <MenuItem.Icon>
+          <TextBlock Text="&#xEA8F;" Style="{StaticResource MenuIcon}" Foreground="{StaticResource Warning}"/>
+        </MenuItem.Icon>
+        <MenuItem.Style>
+          <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Header" Value="Hatırlatıcı kur…"/>
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding HasReminder}" Value="True">
+                <Setter Property="Header" Value="Hatırlatıcıyı değiştir…"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </MenuItem.Style>
+      </MenuItem>
+      <MenuItem Header="Hatırlatıcıyı kaldır" Click="MenuRemoveReminder_Click">
+        <MenuItem.Icon>
+          <TextBlock Text="&#xE711;" Style="{StaticResource MenuIcon}"/>
+        </MenuItem.Icon>
+        <MenuItem.Style>
+          <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding HasReminder}" Value="False">
+                <Setter Property="Visibility" Value="Collapsed"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </MenuItem.Style>
+      </MenuItem>
+      <Separator/>
+      <MenuItem Header="Sil" InputGestureText="Del" Click="MenuDelete_Click" Foreground="{StaticResource Danger}">
+        <MenuItem.Icon>
+          <TextBlock Text="&#xE74D;" Style="{StaticResource MenuIcon}" Foreground="{StaticResource Danger}"/>
+        </MenuItem.Icon>
+      </MenuItem>
+    </ContextMenu>
+
+    <!-- görev kartı -->
+    <DataTemplate x:Key="ItemTemplate">
+      <Grid x:Name="cardRoot" Margin="0,0,0,8">
+        <Border x:Name="card" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}"
+                BorderThickness="1" CornerRadius="10"/>
+        <Grid Margin="14,12">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+
+          <Button Style="{StaticResource CheckCircle}" Click="Check_Click" VerticalAlignment="Top" Margin="0,1,14,0"
+                  ToolTip="Tamamlandı olarak işaretle"/>
+
+          <StackPanel Grid.Column="1">
+            <TextBlock x:Name="title" Text="{Binding Title}" FontSize="14.5" FontWeight="SemiBold"
+                       Foreground="{StaticResource Text}" TextWrapping="Wrap"/>
+            <TextBlock x:Name="note" Text="{Binding Note}" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"
+                       Margin="0,4,0,0" MaxHeight="58" TextTrimming="CharacterEllipsis" FontSize="13"/>
+            <WrapPanel Margin="0,9,0,0">
+              <Border x:Name="rem" CornerRadius="5" Padding="7,3" Background="{StaticResource AccentSoft}" Margin="0,0,10,0">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock x:Name="remIcon" Text="&#xEA8F;" FontFamily="{StaticResource Icons}" FontSize="11"
+                             Foreground="{StaticResource AccentSoftText}" VerticalAlignment="Center" Margin="0,1,6,0"/>
+                  <TextBlock x:Name="remText" Text="{Binding ReminderText}" Foreground="{StaticResource AccentSoftText}"
+                             FontSize="12" FontWeight="SemiBold"/>
+                  <TextBlock x:Name="remLate" Text="  · zamanı geldi" Foreground="{StaticResource Danger}" FontSize="12"
+                             Visibility="Collapsed"/>
+                </StackPanel>
+              </Border>
+              <TextBlock x:Name="meta" Text="{Binding CreatedText}" Foreground="{StaticResource TextFaint}" FontSize="12"
+                         VerticalAlignment="Center"/>
+            </WrapPanel>
+          </StackPanel>
+        </Grid>
+      </Grid>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding HasNote}" Value="False">
+          <Setter TargetName="note" Property="Visibility" Value="Collapsed"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding HasReminder}" Value="False">
+          <Setter TargetName="rem" Property="Visibility" Value="Collapsed"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+          <Setter TargetName="rem" Property="Background" Value="{StaticResource DangerSoft}"/>
+          <Setter TargetName="remText" Property="Foreground" Value="{StaticResource Danger}"/>
+          <Setter TargetName="remIcon" Property="Foreground" Value="{StaticResource Danger}"/>
+          <Setter TargetName="remLate" Property="Visibility" Value="Visible"/>
+          <Setter TargetName="card" Property="BorderBrush" Value="#5A2A2E"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+          <Setter TargetName="title" Property="TextDecorations" Value="Strikethrough"/>
+          <Setter TargetName="title" Property="Foreground" Value="{StaticResource TextMuted}"/>
+          <Setter TargetName="meta" Property="Text" Value="{Binding CompletedText}"/>
+          <Setter TargetName="rem" Property="Background" Value="{StaticResource Surface2}"/>
+          <Setter TargetName="remText" Property="Foreground" Value="{StaticResource TextFaint}"/>
+          <Setter TargetName="remIcon" Property="Foreground" Value="{StaticResource TextFaint}"/>
+          <Setter TargetName="remLate" Property="Visibility" Value="Collapsed"/>
+          <Setter TargetName="cardRoot" Property="Opacity" Value="0.75"/>
+        </DataTrigger>
+        <Trigger SourceName="cardRoot" Property="IsMouseOver" Value="True">
+          <Setter TargetName="card" Property="Background" Value="{StaticResource SurfaceHover}"/>
+        </Trigger>
+        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+          <Setter TargetName="card" Property="BorderBrush" Value="{StaticResource Accent}"/>
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
+
+  </Window.Resources>
+
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
-    <StackPanel Margin="22,18,22,0">
-      <TextBlock Text="ESN Görev Takip" FontSize="22" FontWeight="SemiBold"/>
-      <TextBlock x:Name="TodayText" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0" FontSize="13"/>
+    <!-- üst kısım -->
+    <Grid Margin="22,18,22,0">
+      <StackPanel x:Name="HeaderPanel">
+        <TextBlock Text="ESN Görev Takip" FontSize="22" FontWeight="SemiBold"/>
+        <TextBlock x:Name="TodayText" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0" FontSize="13"/>
+      </StackPanel>
+      <Button HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource AccentBtn}"
+              Click="NewButton_Click" ToolTip="Yeni not (Ctrl+N)" Padding="16,8">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="&#xE710;" FontFamily="{StaticResource Icons}" FontSize="12" VerticalAlignment="Center" Margin="0,1,8,0"/>
+          <TextBlock Text="Yeni Not"/>
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <!-- hızlı ekleme -->
+    <TextBox x:Name="QuickBox" Grid.Row="1" Margin="22,16,22,0" Padding="12,10"
+             Tag="Hızlı not yaz ve Enter'a bas…   (hatırlatıcı için: Yeni Not)" KeyDown="QuickBox_KeyDown"/>
+
+    <!-- sekmeler + arama -->
+    <Grid Grid.Row="2" Margin="22,14,22,4">
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <RadioButton x:Name="TabActive" Style="{StaticResource TabRadio}" GroupName="tabs" IsChecked="True"
+                     Checked="Tab_Checked" Content="Aktif"/>
+        <RadioButton x:Name="TabReminders" Style="{StaticResource TabRadio}" GroupName="tabs"
+                     Checked="Tab_Checked" Content="Hatırlatmalı"/>
+        <RadioButton x:Name="TabDone" Style="{StaticResource TabRadio}" GroupName="tabs"
+                     Checked="Tab_Checked" Content="Tamamlanan"/>
+      </StackPanel>
+      <TextBox x:Name="SearchBox" HorizontalAlignment="Right" Width="210" Padding="10,6" Tag="Ara…  (Ctrl+F)"
+               TextChanged="SearchBox_TextChanged"/>
+    </Grid>
+
+    <!-- liste -->
+    <ListBox x:Name="List" Grid.Row="3" Margin="22,8,10,0" Background="Transparent" BorderThickness="0"
+             ItemTemplate="{StaticResource ItemTemplate}" HorizontalContentAlignment="Stretch"
+             ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.ScrollUnit="Pixel"
+             MouseDoubleClick="List_MouseDoubleClick" KeyDown="List_KeyDown">
+      <ListBox.ItemContainerStyle>
+        <Style TargetType="ListBoxItem">
+          <Setter Property="ContextMenu" Value="{StaticResource ItemMenu}"/>
+          <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+          <Setter Property="Margin" Value="0,0,10,0"/>
+          <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="ListBoxItem">
+                <ContentPresenter/>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+          <EventSetter Event="PreviewMouseRightButtonDown" Handler="Item_PreviewRightDown"/>
+        </Style>
+      </ListBox.ItemContainerStyle>
+    </ListBox>
+
+    <StackPanel x:Name="EmptyState" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center"
+                IsHitTestVisible="False" Margin="0,0,0,40">
+      <TextBlock Text="&#xE73A;" FontFamily="{StaticResource Icons}" FontSize="38" Foreground="{StaticResource Border}"
+                 HorizontalAlignment="Center"/>
+      <TextBlock x:Name="EmptyTitle" FontSize="15" FontWeight="SemiBold"
+                 Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+      <TextBlock x:Name="EmptyHint" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" FontSize="12.5"/>
     </StackPanel>
+
+    <!-- alt bilgi çubuğu -->
+    <Border Grid.Row="4" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}"
+            BorderThickness="0,1,0,0" Padding="22,9" Margin="0,8,0,0">
+      <Grid>
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="&#xEA8F;" FontFamily="{StaticResource Icons}" Foreground="{StaticResource Warning}"
+                     VerticalAlignment="Center" Margin="0,1,8,0" FontSize="12"/>
+          <TextBlock x:Name="NextText" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
+        </StackPanel>
+        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextFaint}" FontSize="12"
+                   Text="Sağ tık: seçenekler  ·  Çift tık: düzenle"/>
+      </Grid>
+    </Border>
   </Grid>
 </Window>
