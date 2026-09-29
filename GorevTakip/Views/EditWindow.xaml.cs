@@ -243,7 +243,7 @@ public partial class EditWindow : Window
         DialogResult = true;
     }
 
-    // "demir lojistik" yazıldıysa ve "Demir Lojistik" zaten varsa mevcut yazımı kullan,
+    // "km kümsan" yazıldıysa ve "KM Kümsan" zaten varsa mevcut yazımı kullan,
     // yoksa filtrede aynı müşteri iki ayrı etiket gibi görünüyor
     private string NormalizeLabel(string raw)
     {

@@ -21,7 +21,7 @@
       </Grid.ColumnDefinitions>
       <StackPanel>
         <TextBlock Text="Müşteri / etiket" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,0,0,6"/>
-        <TextBox x:Name="LabelBox" Tag="Örn: Demir Lojistik (isteğe bağlı)" TextChanged="LabelBox_TextChanged"/>
+        <TextBox x:Name="LabelBox" Tag="Örn: KM Kümsan (isteğe bağlı)" TextChanged="LabelBox_TextChanged"/>
       </StackPanel>
       <StackPanel Grid.Column="2">
         <TextBlock Text="Öncelik" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,0,0,6"/>

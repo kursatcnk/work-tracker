@@ -8,7 +8,7 @@ namespace GorevTakip.Helpers;
 
 public static class Labels
 {
-    // "demir lojistik" ile "Demir Lojistik" aynı etiket sayılsın (türkçe İ/ı dahil)
+    // "km kümsan" ile "KM Kümsan" aynı etiket sayılsın (türkçe İ/ı dahil)
     public static readonly StringComparer Comparer = StringComparer.Create(Fmt.Tr, ignoreCase: true);
 
     public static bool Same(string? a, string? b) => Comparer.Equals(a?.Trim() ?? "", b?.Trim() ?? "");
