@@ -18,12 +18,16 @@ public class TodoItem : INotifyPropertyChanged
     public bool IsCompleted { get; set; }
     public DateTime? CompletedAt { get; set; }
     public Priority Priority { get; set; } = Priority.Normal;
+
+    // müşteri adı ya da kategori. tek etiket yeterli oldu, çoklu etiket karmaşıklaştırıyordu
+    public string Label { get; set; } = "";
     public ObservableCollection<Stage> Stages { get; set; } = new();
 
     // aşağıdakiler json'a yazılmıyor, sadece ekranda göstermek için
 
     [JsonIgnore] public bool HasNote => !string.IsNullOrWhiteSpace(Note);
     [JsonIgnore] public bool HasReminder => ReminderAt.HasValue;
+    [JsonIgnore] public bool HasLabel => !string.IsNullOrWhiteSpace(Label);
 
     // çalmayı bekleyen hatırlatma: zamanı kurulmuş, henüz çalmamış, görev de açık
     [JsonIgnore] public bool IsReminderPending => ReminderAt.HasValue && !ReminderFired && !IsCompleted;

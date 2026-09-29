@@ -9,8 +9,9 @@ Müşteri takibi gibi "şu gün tekrar yazmam lazım" işleri unutmamak için ya
 - **Kaçırılan hatırlatmalar:** Program kapalıyken zamanı geçen hatırlatmalar, program açıldığında "kaçırıldı" diye gösterilir.
 - **Aşamalar:** Bir görevi adımlara bölebilirsin (ör. *API düzeltilecek* → *endpointler düzeltildi* ✓ → *portlar check edilecek*). Kartta ilerleme çubuğu ve sıradaki adım görünür.
 - **Öncelik:** Normal / Yüksek / Acil. Acil işler listenin en üstünde durur ve renkli şeritle işaretlenir.
+- **Müşteri / etiket:** Her göreve bir müşteri adı ya da kategori verilebilir. Etiketler kartta renkli rozet olarak görünür; sekmelerin altındaki çiplerle ya da karttaki rozete tıklayarak listeyi o müşteriye göre süzebilirsin. Filtre açıkken eklenen yeni notlar etiketi otomatik alır.
 - **Sağ tık menüsü:** Tamamla, düzenle, aşama ekle, hatırlatıcı kur/kaldır, metni kopyala, sil.
-- **Arama:** Başlık, not ve aşamalarda Türkçe karakter duyarlı arama.
+- **Arama:** Başlık, not, etiket ve aşamalarda Türkçe karakter duyarlı arama.
 - **Sistem tepsisi:** Pencereyi kapatınca program saatin yanındaki simgeye iner ve hatırlatmalar için çalışmaya devam eder.
 - **Taşınabilir veri:** Tüm notlar exe'nin yanındaki `gorevler.json` dosyasına kaydedilir, USB ile birlikte taşınır.
 

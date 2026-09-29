@@ -147,6 +147,13 @@
             </StackPanel>
 
             <WrapPanel Margin="0,9,0,0">
+              <!-- etiket rozeti: tıklayınca liste bu etikete göre süzülüyor -->
+              <Border x:Name="label" CornerRadius="5" Padding="7,3" Margin="0,0,8,0" Cursor="Hand"
+                      Background="{Binding Label, Converter={StaticResource LabelBrush}, ConverterParameter=bg}"
+                      MouseLeftButtonUp="LabelChip_Click" ToolTip="Bu müşterinin/etiketin görevlerini göster">
+                <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{Binding Label, Converter={StaticResource LabelBrush}, ConverterParameter=fg}"/>
+              </Border>
               <Border x:Name="prio" CornerRadius="5" Padding="7,3" Margin="0,0,8,0" Visibility="Collapsed">
                 <TextBlock x:Name="prioText" Text="{Binding PriorityText}" FontSize="11.5" FontWeight="Bold"/>
               </Border>
@@ -172,6 +179,9 @@
         </DataTrigger>
         <DataTrigger Binding="{Binding HasReminder}" Value="False">
           <Setter TargetName="rem" Property="Visibility" Value="Collapsed"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding HasLabel}" Value="False">
+          <Setter TargetName="label" Property="Visibility" Value="Collapsed"/>
         </DataTrigger>
         <DataTrigger Binding="{Binding HasStages}" Value="False">
           <Setter TargetName="stageRow" Property="Visibility" Value="Collapsed"/>
@@ -223,6 +233,7 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
@@ -258,7 +269,10 @@
     </Grid>
 
     <!-- liste -->
-    <ListBox x:Name="List" Grid.Row="3" Margin="22,8,10,0" Background="Transparent" BorderThickness="0"
+    <!-- etiket filtresi. çipleri kod tarafında dolduruyoruz, hiç etiket yoksa gizli -->
+    <WrapPanel x:Name="LabelBar" Grid.Row="3" Margin="22,8,22,0" Visibility="Collapsed"/>
+
+    <ListBox x:Name="List" Grid.Row="4" Margin="22,8,10,0" Background="Transparent" BorderThickness="0"
              ItemTemplate="{StaticResource ItemTemplate}" HorizontalContentAlignment="Stretch"
              ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.ScrollUnit="Pixel"
              MouseDoubleClick="List_MouseDoubleClick" KeyDown="List_KeyDown">
@@ -280,7 +294,7 @@
       </ListBox.ItemContainerStyle>
     </ListBox>
 
-    <StackPanel x:Name="EmptyState" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center"
+    <StackPanel x:Name="EmptyState" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Center"
                 IsHitTestVisible="False" Margin="0,0,0,40">
       <TextBlock Text="&#xE73A;" FontFamily="{StaticResource Icons}" FontSize="38" Foreground="{StaticResource Border}"
                  HorizontalAlignment="Center"/>
@@ -290,7 +304,7 @@
     </StackPanel>
 
     <!-- alt bilgi çubuğu -->
-    <Border Grid.Row="4" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}"
+    <Border Grid.Row="5" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}"
             BorderThickness="0,1,0,0" Padding="22,9" Margin="0,8,0,0">
       <Grid>
         <StackPanel Orientation="Horizontal">

@@ -34,6 +34,10 @@ public partial class MainWindow : Window
     private bool _saveErrorShown;
     private int _lastMinute = -1;
 
+    // null = tüm etiketler
+    private string? _labelFilter;
+    private string _labelBarKey = "";
+
     public MainWindow()
     {
         InitializeComponent();
@@ -131,16 +135,19 @@ public partial class MainWindow : Window
 
     #region liste / görünüm
 
+    private static bool InTab(TodoItem i, Tab tab) => tab switch
+    {
+        Tab.Active => !i.IsCompleted,
+        Tab.Reminders => !i.IsCompleted && i.HasReminder,
+        _ => i.IsCompleted,
+    };
+
+    private bool MatchesLabelFilter(TodoItem i) => _labelFilter == null || Labels.Same(i.Label, _labelFilter);
+
     private bool FilterItem(object o)
     {
         var i = (TodoItem)o;
-        bool inTab = CurrentTab switch
-        {
-            Tab.Active => !i.IsCompleted,
-            Tab.Reminders => !i.IsCompleted && i.HasReminder,
-            _ => i.IsCompleted,
-        };
-        if (!inTab) return false;
+        if (!InTab(i, CurrentTab) || !MatchesLabelFilter(i)) return false;
 
         var q = SearchBox.Text.Trim();
         if (q.Length == 0) return true;
@@ -148,16 +155,20 @@ public partial class MainWindow : Window
         var ci = Fmt.Tr.CompareInfo;
         return ci.IndexOf(i.Title, q, CompareOptions.IgnoreCase) >= 0 ||
                ci.IndexOf(i.Note, q, CompareOptions.IgnoreCase) >= 0 ||
+               ci.IndexOf(i.Label, q, CompareOptions.IgnoreCase) >= 0 ||
                i.Stages.Any(s => ci.IndexOf(s.Text, q, CompareOptions.IgnoreCase) >= 0);
     }
 
     private void RefreshAll()
     {
+        BuildLabelBar();
         _view.Refresh();
 
-        TabActive.Content = $"Aktif  {_items.Count(i => !i.IsCompleted)}";
-        TabReminders.Content = $"Hatırlatmalı  {_items.Count(i => !i.IsCompleted && i.HasReminder)}";
-        TabDone.Content = $"Tamamlanan  {_items.Count(i => i.IsCompleted)}";
+        // sekme sayıları seçili etikete göre, böylece "bu müşteride kaç açık iş var" direkt görünüyor
+        var scoped = _items.Where(MatchesLabelFilter).ToList();
+        TabActive.Content = $"Aktif  {scoped.Count(i => InTab(i, Tab.Active))}";
+        TabReminders.Content = $"Hatırlatmalı  {scoped.Count(i => InTab(i, Tab.Reminders))}";
+        TabDone.Content = $"Tamamlanan  {scoped.Count(i => InTab(i, Tab.Done))}";
 
         bool empty = _view.IsEmpty;
         EmptyState.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
@@ -167,6 +178,11 @@ public partial class MainWindow : Window
             {
                 EmptyTitle.Text = "Aramaya uyan not yok";
                 EmptyHint.Text = "Farklı bir kelime dene.";
+            }
+            else if (_labelFilter != null)
+            {
+                EmptyTitle.Text = $"\"{_labelFilter}\" için bu sekmede görev yok";
+                EmptyHint.Text = "Filtreyi kaldırmak için yukarıdaki \"Tümü\"ye tıkla.";
             }
             else
             {
@@ -180,6 +196,83 @@ public partial class MainWindow : Window
         }
         UpdateStatus();
     }
+
+    // sekmedeki görevlerin etiketleri, en kalabalık müşteri başta
+    private void BuildLabelBar()
+    {
+        var groups = _items
+            .Where(i => i.HasLabel && InTab(i, CurrentTab))
+            .GroupBy(i => i.Label.Trim(), Labels.Comparer)
+            .Select(g => (Label: g.First().Label.Trim(), Count: g.Count()))
+            .OrderByDescending(g => g.Count)
+            .ThenBy(g => g.Label, Labels.Comparer)
+            .ToList();
+
+        // seçili etiketin bu sekmede görevi kalmadıysa da çipi gösteriyoruz, yoksa filtre görünmez kalıyor
+        if (_labelFilter != null && !groups.Any(g => Labels.Same(g.Label, _labelFilter)))
+            groups.Add((_labelFilter, 0));
+
+        LabelBar.Visibility = groups.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        // her yenilemede baştan çizersek tıklanan çip elimizden gidiyor, sadece değiştiyse çiz
+        var key = string.Join("|", groups.Select(g => g.Label + ":" + g.Count)) + "#" + _labelFilter;
+        if (key == _labelBarKey) return;
+        _labelBarKey = key;
+
+        LabelBar.Children.Clear();
+        LabelBar.Children.Add(MakeLabelChip(null, "Tümü"));
+        foreach (var g in groups)
+            LabelBar.Children.Add(MakeLabelChip(g.Label, $"{g.Label}  {g.Count}"));
+    }
+
+    private RadioButton MakeLabelChip(string? label, string text)
+    {
+        var chip = new RadioButton
+        {
+            Style = (Style)FindResource("FilterChip"),
+            GroupName = "labels",
+            IsChecked = label == null ? _labelFilter == null : Labels.Same(label, _labelFilter),
+        };
+
+        if (label == null)
+        {
+            chip.Content = text;
+        }
+        else
+        {
+            // renkli nokta, karttaki etiket rengiyle aynı
+            var dot = new System.Windows.Shapes.Ellipse
+            {
+                Width = 7,
+                Height = 7,
+                Fill = Labels.BrushesFor(label).Fg,
+                Margin = new Thickness(0, 1, 7, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            var panel = new StackPanel { Orientation = Orientation.Horizontal };
+            panel.Children.Add(dot);
+            panel.Children.Add(new TextBlock { Text = text });
+            chip.Content = panel;
+        }
+
+        // IsChecked yukarıda verildiği için bu event ilk oluşturmada tetiklenmiyor
+        chip.Checked += (_, _) => SetLabelFilter(label);
+        return chip;
+    }
+
+    private void SetLabelFilter(string? label)
+    {
+        _labelFilter = string.IsNullOrWhiteSpace(label) ? null : label.Trim();
+        RefreshAll();
+    }
+
+    // düzenleme penceresinde öneri olarak çıkacak etiketler, en çok kullanılan başta
+    private List<string> KnownLabels() => _items
+        .Where(i => i.HasLabel)
+        .GroupBy(i => i.Label.Trim(), Labels.Comparer)
+        .OrderByDescending(g => g.Count())
+        .Select(g => g.First().Label.Trim())
+        .ToList();
 
     private void UpdateStatus()
     {
@@ -240,7 +333,8 @@ public partial class MainWindow : Window
 
     public void OpenEditor(TodoItem? item, bool focusReminder = false)
     {
-        var dlg = new EditWindow(item, focusReminder);
+        // bir müşteriye filtrelenmişken yeni not açılırsa etiket hazır gelsin
+        var dlg = new EditWindow(item, focusReminder, KnownLabels(), item == null ? _labelFilter : null);
         if (IsVisible) dlg.Owner = this;
         else dlg.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
@@ -285,7 +379,7 @@ public partial class MainWindow : Window
     // müşteriye yazarken işe yarıyor: başlık + not + aşamalar düz metin olarak panoya
     private void CopyItem(TodoItem item)
     {
-        var text = item.Title;
+        var text = item.HasLabel ? $"[{item.Label}] {item.Title}" : item.Title;
         if (item.HasNote) text += Environment.NewLine + item.Note;
         foreach (var s in item.Stages)
             text += Environment.NewLine + (s.IsDone ? "[x] " : "[ ] ") + s.Text;
@@ -322,7 +416,7 @@ public partial class MainWindow : Window
         var text = QuickBox.Text.Trim();
         if (text.Length == 0) { OpenEditor(null); return; }
         QuickBox.Clear();
-        AddItem(new TodoItem { Title = text });
+        AddItem(new TodoItem { Title = text, Label = _labelFilter ?? "" });
     }
 
     private void Tab_Checked(object sender, RoutedEventArgs e)
@@ -395,6 +489,13 @@ public partial class MainWindow : Window
         if (ItemOf(sender) is not TodoItem item) return;
         e.Handled = true;
         OpenStages(item);
+    }
+
+    private void LabelChip_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (ItemOf(sender) is not TodoItem item || !item.HasLabel) return;
+        e.Handled = true;
+        SetLabelFilter(item.Label);
     }
 
     private void MenuCopy_Click(object sender, RoutedEventArgs e)

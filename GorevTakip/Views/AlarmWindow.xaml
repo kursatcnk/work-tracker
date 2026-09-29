@@ -38,7 +38,10 @@
           </Button>
         </Grid>
 
-        <TextBlock x:Name="TitleText" FontSize="21" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,18,0,0"/>
+        <Border x:Name="LabelBorder" CornerRadius="5" Padding="8,3" Margin="0,18,0,0" HorizontalAlignment="Left">
+          <TextBlock x:Name="LabelText" FontSize="12.5" FontWeight="SemiBold"/>
+        </Border>
+        <TextBlock x:Name="TitleText" FontSize="21" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,0"/>
 
         <Border x:Name="NoteBorder" Background="{StaticResource Surface2}" CornerRadius="8" Padding="14,12" Margin="0,12,0,0">
           <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">

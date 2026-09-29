@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,10 +21,15 @@ public partial class EditWindow : Window
     public TodoItem? Result { get; private set; }
     public bool ReminderChanged { get; private set; }
 
-    public EditWindow(TodoItem? existing, bool focusReminder)
+    // öneri olarak gösterilecek, daha önce kullanılmış etiketler (en çok kullanılan başta)
+    private readonly IReadOnlyList<string> _knownLabels;
+
+    public EditWindow(TodoItem? existing, bool focusReminder, IReadOnlyList<string>? knownLabels = null, string? defaultLabel = null)
     {
         InitializeComponent();
         _existing = existing;
+        _knownLabels = knownLabels ?? Array.Empty<string>();
+        LabelBox.Text = existing?.Label ?? defaultLabel ?? "";
         SourceInitialized += (_, _) => NativeMethods.UseDarkTitleBar(this);
 
         HeaderText.Text = existing == null ? "Yeni not" : "Notu düzenle";
@@ -50,6 +58,7 @@ public partial class EditWindow : Window
 
         _loading = false;
         UpdatePreview();
+        UpdateLabelSuggestions();
 
         Loaded += (_, _) =>
         {
@@ -108,6 +117,43 @@ public partial class EditWindow : Window
     }
 
     private void Reminder_Changed(object sender, RoutedEventArgs e) => UpdatePreview();
+
+    // yazdıkça önerileri süzüyoruz. kutudaki etiketle birebir aynı olanı göstermeye gerek yok
+    private void UpdateLabelSuggestions()
+    {
+        LabelSuggestions.Children.Clear();
+        var typed = LabelBox.Text.Trim();
+        var matches = _knownLabels
+            .Where(l => !Labels.Same(l, typed))
+            .Where(l => typed.Length == 0 || Fmt.Tr.CompareInfo.IndexOf(l, typed, CompareOptions.IgnoreCase) >= 0)
+            .Take(8);
+
+        foreach (var label in matches)
+        {
+            var (bg, fg) = Labels.BrushesFor(label);
+            var chip = new Button
+            {
+                Content = label,
+                Style = (Style)FindResource("ChipBtn"),
+                Background = bg,
+                Foreground = fg,
+                ToolTip = "Bu etiketi kullan",
+            };
+            chip.Click += (_, _) =>
+            {
+                LabelBox.Text = label;
+                LabelBox.CaretIndex = label.Length;
+                LabelBox.Focus();
+            };
+            LabelSuggestions.Children.Add(chip);
+        }
+        LabelSuggestions.Visibility = LabelSuggestions.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void LabelBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_loading) UpdateLabelSuggestions();
+    }
 
     private void DateBox_SelectedDateChanged(object? sender, SelectionChangedEventArgs e)
     {
@@ -182,6 +228,7 @@ public partial class EditWindow : Window
         ReminderChanged = item.ReminderAt != reminder;
         item.Title = title;
         item.Note = note;
+        item.Label = NormalizeLabel(LabelBox.Text);
         item.Priority = PrioUrgent.IsChecked == true ? Priority.Acil
                       : PrioHigh.IsChecked == true ? Priority.Yuksek
                       : Priority.Normal;
@@ -194,6 +241,15 @@ public partial class EditWindow : Window
 
         Result = item;
         DialogResult = true;
+    }
+
+    // "demir lojistik" yazıldıysa ve "Demir Lojistik" zaten varsa mevcut yazımı kullan,
+    // yoksa filtrede aynı müşteri iki ayrı etiket gibi görünüyor
+    private string NormalizeLabel(string raw)
+    {
+        var label = raw.Trim();
+        if (label.Length == 0) return "";
+        return _knownLabels.FirstOrDefault(l => Labels.Same(l, label)) ?? label;
     }
 
     private void ShowError(string message)

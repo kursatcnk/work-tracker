@@ -35,6 +35,20 @@ public partial class AlarmWindow : Window
         Title = "Hatırlatma: " + item.Title;
         NoteText.Text = item.Note;
         NoteBorder.Visibility = item.HasNote ? Visibility.Visible : Visibility.Collapsed;
+        if (item.HasLabel)
+        {
+            var (bg, fg) = Labels.BrushesFor(item.Label);
+            LabelBorder.Background = bg;
+            LabelText.Foreground = fg;
+            LabelText.Text = item.Label;
+        }
+        else
+        {
+            // etiket yoksa başlık eski yerine otursun
+            LabelBorder.Visibility = Visibility.Collapsed;
+            TitleText.Margin = new Thickness(0, 18, 0, 0);
+        }
+
         StageText.Text = $"{item.StageProgressText} · {item.CurrentStageText}";
         StageBorder.Visibility = item.HasStages ? Visibility.Visible : Visibility.Collapsed;
 
