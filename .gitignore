@@ -1,0 +1,15 @@
+# derleme çıktıları
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# yayın klasörü (usb'ye giden exe buraya düşüyor)
+publish/
+
+# program çalışırken exe'nin yanında oluşan dosyalar
+gorevler*.json
+*.bak
+*.tmp
+hata.log

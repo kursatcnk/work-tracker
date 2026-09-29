@@ -1,0 +1,19 @@
+<Window x:Class="GorevTakip.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ESN Görev Takip" Width="780" Height="700" MinWidth="560" MinHeight="440"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
+        FontFamily="Segoe UI" UseLayoutRounding="True"
+        WindowStartupLocation="CenterScreen">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <StackPanel Margin="22,18,22,0">
+      <TextBlock Text="ESN Görev Takip" FontSize="22" FontWeight="SemiBold"/>
+      <TextBlock x:Name="TodayText" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0" FontSize="13"/>
+    </StackPanel>
+  </Grid>
+</Window>
