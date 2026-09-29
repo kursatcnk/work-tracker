@@ -31,6 +31,8 @@ public partial class EditWindow : Window
         {
             TitleBox.Text = existing.Title;
             NoteBox.Text = existing.Note;
+            PrioHigh.IsChecked = existing.Priority == Priority.Yuksek;
+            PrioUrgent.IsChecked = existing.Priority == Priority.Acil;
         }
 
         if (existing?.ReminderAt is DateTime r)
@@ -180,6 +182,9 @@ public partial class EditWindow : Window
         ReminderChanged = item.ReminderAt != reminder;
         item.Title = title;
         item.Note = note;
+        item.Priority = PrioUrgent.IsChecked == true ? Priority.Acil
+                      : PrioHigh.IsChecked == true ? Priority.Yuksek
+                      : Priority.Normal;
         if (ReminderChanged)
         {
             // zaman değiştiyse tekrar çalabilmesi için "çaldı" bilgisini sıfırla

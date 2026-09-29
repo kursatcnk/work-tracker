@@ -5,7 +5,8 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="True" ShowActivated="True"
         WindowStartupLocation="CenterScreen" FontFamily="Segoe UI" UseLayoutRounding="True"
-        Foreground="{StaticResource Text}">
+        Foreground="{StaticResource Text}"
+        Icon="pack://application:,,,/GorevTakip;component/Assets/app.ico">
   <Grid Margin="18">
     <!-- yanıp sönen dış çerçeve -->
     <Border x:Name="Glow" CornerRadius="16" BorderThickness="3" BorderBrush="{StaticResource Warning}" Margin="-3"/>
@@ -43,6 +44,15 @@
           <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
             <TextBlock x:Name="NoteText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20"/>
           </ScrollViewer>
+        </Border>
+
+        <!-- görevin aşamaları varsa nerede kaldığımızı da gösterelim -->
+        <Border x:Name="StageBorder" Background="{StaticResource AccentSoft}" CornerRadius="8" Padding="12,9" Margin="0,8,0,0">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE8FD;" FontFamily="{StaticResource Icons}" FontSize="13" Foreground="{StaticResource AccentSoftText}"
+                       VerticalAlignment="Center" Margin="0,1,9,0"/>
+            <TextBlock x:Name="StageText" Foreground="{StaticResource AccentSoftText}" FontSize="13" TextWrapping="Wrap"/>
+          </StackPanel>
         </Border>
 
         <TextBlock Text="Ertele" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,18,0,8"/>

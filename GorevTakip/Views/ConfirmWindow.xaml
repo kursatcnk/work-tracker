@@ -4,7 +4,8 @@
         Title="ESN Görev Takip" Width="420" SizeToContent="Height" ResizeMode="NoResize"
         Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
         FontFamily="Segoe UI" UseLayoutRounding="True" ShowInTaskbar="False"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        Icon="pack://application:,,,/GorevTakip;component/Assets/app.ico">
   <StackPanel Margin="22,18,22,20">
     <TextBlock x:Name="HeaderText" FontSize="17" FontWeight="SemiBold"/>
     <TextBlock x:Name="MessageText" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap" FontSize="13"

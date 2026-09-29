@@ -35,6 +35,8 @@ public partial class AlarmWindow : Window
         Title = "Hatırlatma: " + item.Title;
         NoteText.Text = item.Note;
         NoteBorder.Visibility = item.HasNote ? Visibility.Visible : Visibility.Collapsed;
+        StageText.Text = $"{item.StageProgressText} · {item.CurrentStageText}";
+        StageBorder.Visibility = item.HasStages ? Visibility.Visible : Visibility.Collapsed;
 
         // program kapalıyken zamanı geçmişse bunu belli edelim
         var at = item.ReminderAt ?? DateTime.Now;

@@ -13,6 +13,12 @@
     <Product>ESN Görev Takip</Product>
     <Version>1.0.0</Version>
     <SatelliteResourceLanguages>tr;en</SatelliteResourceLanguages>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- pencere ve tray ikonu için exe'nin içine gömülüyor. yeniden üretmek: tools/make-icon.ps1 -->
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
 
 </Project>

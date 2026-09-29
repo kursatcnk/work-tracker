@@ -21,6 +21,9 @@ public partial class MainWindow : Window
 {
     private enum Tab { Active, Reminders, Done }
 
+    // ctrl+e ile seçili görevin aşamalarını açmak için
+    public static readonly RoutedUICommand StagesCommand = new("Aşamalar", nameof(StagesCommand), typeof(MainWindow));
+
     private readonly ObservableCollection<TodoItem> _items;
     private readonly ListCollectionView _view;
     private readonly DispatcherTimer _timer;
@@ -144,7 +147,8 @@ public partial class MainWindow : Window
         // türkçe büyük/küçük harf (İ/i, I/ı) doğru eşleşsin diye tr culture ile arıyoruz
         var ci = Fmt.Tr.CompareInfo;
         return ci.IndexOf(i.Title, q, CompareOptions.IgnoreCase) >= 0 ||
-               ci.IndexOf(i.Note, q, CompareOptions.IgnoreCase) >= 0;
+               ci.IndexOf(i.Note, q, CompareOptions.IgnoreCase) >= 0 ||
+               i.Stages.Any(s => ci.IndexOf(s.Text, q, CompareOptions.IgnoreCase) >= 0);
     }
 
     private void RefreshAll()
@@ -179,7 +183,7 @@ public partial class MainWindow : Window
 
     private void UpdateStatus()
     {
-        TodayText.Text = DateTime.Now.ToString("d MMMM yyyy, dddd", Fmt.Tr);
+        Logo.Subtitle = DateTime.Now.ToString("d MMMM yyyy, dddd", Fmt.Tr);
 
         var next = _items.Where(i => i.IsReminderPending).OrderBy(i => i.ReminderAt).FirstOrDefault();
         NextText.Text = next == null
@@ -264,6 +268,32 @@ public partial class MainWindow : Window
         RefreshAll();
     }
 
+    private void OpenStages(TodoItem item)
+    {
+        var dlg = new StagesWindow(item);
+        if (IsVisible) dlg.Owner = this;
+        else dlg.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        dlg.ShowDialog();
+
+        if (!dlg.Changed && !dlg.CompleteRequested) return;
+        if (dlg.CompleteRequested) SetCompleted(item, true);
+        item.Refresh();
+        Save();
+        RefreshAll();
+    }
+
+    // müşteriye yazarken işe yarıyor: başlık + not + aşamalar düz metin olarak panoya
+    private void CopyItem(TodoItem item)
+    {
+        var text = item.Title;
+        if (item.HasNote) text += Environment.NewLine + item.Note;
+        foreach (var s in item.Stages)
+            text += Environment.NewLine + (s.IsDone ? "[x] " : "[ ] ") + s.Text;
+
+        // pano başka bir programda açıksa exception atabiliyor, sorun etmeyelim
+        try { Clipboard.SetText(text); } catch { }
+    }
+
     // menü/kart butonlarından hangi görevin tıklandığını DataContext'ten buluyoruz
     private static TodoItem? ItemOf(object sender) => (sender as FrameworkElement)?.DataContext as TodoItem;
 
@@ -278,6 +308,11 @@ public partial class MainWindow : Window
     {
         SearchBox.Focus();
         SearchBox.SelectAll();
+    }
+
+    private void StagesCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        if (List.SelectedItem is TodoItem item) OpenStages(item);
     }
 
     private void QuickBox_KeyDown(object sender, KeyEventArgs e)
@@ -333,6 +368,7 @@ public partial class MainWindow : Window
         {
             case Key.Delete: DeleteItem(item); e.Handled = true; break;
             case Key.Enter: OpenEditor(item); e.Handled = true; break;
+            case Key.C when Keyboard.Modifiers == ModifierKeys.Control: CopyItem(item); e.Handled = true; break;
         }
     }
 
@@ -347,6 +383,23 @@ public partial class MainWindow : Window
     private void MenuEdit_Click(object sender, RoutedEventArgs e)
     {
         if (ItemOf(sender) is TodoItem item) OpenEditor(item);
+    }
+
+    private void MenuStages_Click(object sender, RoutedEventArgs e)
+    {
+        if (ItemOf(sender) is TodoItem item) OpenStages(item);
+    }
+
+    private void StageRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (ItemOf(sender) is not TodoItem item) return;
+        e.Handled = true;
+        OpenStages(item);
+    }
+
+    private void MenuCopy_Click(object sender, RoutedEventArgs e)
+    {
+        if (ItemOf(sender) is TodoItem item) CopyItem(item);
     }
 
     private void MenuReminder_Click(object sender, RoutedEventArgs e)
@@ -387,8 +440,19 @@ public partial class MainWindow : Window
 
     private void SetupTray()
     {
+        // ikonu gömülü kaynaktan tepsi boyutunda (16px) alıyoruz, exe'den çekince bulanık çıkıyordu
         System.Drawing.Icon? icon = null;
-        try { if (Environment.ProcessPath is string p) icon = System.Drawing.Icon.ExtractAssociatedIcon(p); } catch { }
+        try
+        {
+            var res = Application.GetResourceStream(new Uri("pack://application:,,,/GorevTakip;component/Assets/app.ico"));
+            if (res != null)
+                icon = new System.Drawing.Icon(res.Stream, System.Windows.Forms.SystemInformation.SmallIconSize);
+        }
+        catch { }
+        if (icon == null)
+        {
+            try { if (Environment.ProcessPath is string p) icon = System.Drawing.Icon.ExtractAssociatedIcon(p); } catch { }
+        }
 
         _tray = new System.Windows.Forms.NotifyIcon
         {
@@ -467,8 +531,8 @@ public partial class MainWindow : Window
 
     #endregion
 
-    // aktif sekmelerde: hatırlatmalılar en yakın zamana göre üstte, kalanlar en yeni üstte.
-    // tamamlananlarda: en son biten üstte
+    // aktif sekmelerde: önce öncelik (acil en üstte), sonra hatırlatmalılar en yakın zamana göre,
+    // kalanlar en yeni üstte. tamamlananlarda: en son biten üstte
     private sealed class ItemComparer : IComparer
     {
         private readonly Func<Tab> _tab;
@@ -479,6 +543,7 @@ public partial class MainWindow : Window
             var a = (TodoItem)x!;
             var b = (TodoItem)y!;
             if (_tab() == Tab.Done) return Nullable.Compare(b.CompletedAt, a.CompletedAt);
+            if (a.Priority != b.Priority) return b.Priority.CompareTo(a.Priority);
             if (a.ReminderAt.HasValue != b.ReminderAt.HasValue) return a.ReminderAt.HasValue ? -1 : 1;
             if (a.ReminderAt.HasValue) return a.ReminderAt!.Value.CompareTo(b.ReminderAt!.Value);
             return b.CreatedAt.CompareTo(a.CreatedAt);
