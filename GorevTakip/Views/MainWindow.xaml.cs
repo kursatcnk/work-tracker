@@ -38,6 +38,21 @@ public partial class MainWindow : Window
     private string? _labelFilter;
     private string _labelBarKey = "";
 
+    // silme sonrası geri alma
+    private static readonly TimeSpan UndoDuration = TimeSpan.FromSeconds(10);
+    private List<TodoItem> _lastDeleted = new();
+    private DispatcherTimer? _undoTimer;
+
+    // kart şablonu bunu dinliyor: açıkken tamamla yuvarlağı yerine seçim kutusu çıkıyor
+    public static readonly DependencyProperty IsSelectionModeProperty = DependencyProperty.Register(
+        nameof(IsSelectionMode), typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
+
+    public bool IsSelectionMode
+    {
+        get => (bool)GetValue(IsSelectionModeProperty);
+        set => SetValue(IsSelectionModeProperty, value);
+    }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -195,6 +210,7 @@ public partial class MainWindow : Window
             }
         }
         UpdateStatus();
+        UpdateBulkBar();
     }
 
     // sekmedeki görevlerin etiketleri, en kalabalık müşteri başta
@@ -352,14 +368,90 @@ public partial class MainWindow : Window
         RefreshAll();
     }
 
-    private void DeleteItem(TodoItem item)
+    // tekli ve toplu silme aynı yoldan geçiyor: önce onay, sonra birkaç saniyelik "geri al" şansı
+    private void DeleteItems(IReadOnlyList<TodoItem> items)
     {
-        if (!ConfirmWindow.Ask(this, "Notu sil", $"\"{item.Title}\" silinsin mi?\nBu işlem geri alınamaz.", "Sil", "Vazgeç", danger: true))
+        if (items.Count == 0) return;
+
+        bool single = items.Count == 1;
+        var message = single
+            ? $"\"{items[0].Title}\" silinsin mi?"
+            : $"Seçili {items.Count} görev silinsin mi?";
+        if (!ConfirmWindow.Ask(this, single ? "Notu sil" : "Görevleri sil",
+                message + "\n\nSildikten sonra birkaç saniye içinde geri alabilirsin.",
+                single ? "Sil" : $"{items.Count} görevi sil", "Vazgeç", danger: true))
             return;
-        CloseAlarmSilently(item);
-        _items.Remove(item);
+
+        foreach (var item in items)
+        {
+            CloseAlarmSilently(item);
+            _items.Remove(item);
+        }
         Save();
+
+        ExitSelectionMode();
         RefreshAll();
+        ShowUndo(items, single ? "Not silindi" : $"{items.Count} görev silindi");
+    }
+
+    private void ShowUndo(IReadOnlyList<TodoItem> deleted, string text)
+    {
+        // üst üste silinirse sadece son silme geri alınabiliyor, gmail'deki gibi
+        _lastDeleted = deleted.ToList();
+        UndoText.Text = text;
+        UndoBar.Visibility = Visibility.Visible;
+        UpdateBulkBar();
+
+        _undoTimer?.Stop();
+        _undoTimer = new DispatcherTimer { Interval = UndoDuration };
+        _undoTimer.Tick += (_, _) => HideUndo();
+        _undoTimer.Start();
+    }
+
+    private void HideUndo()
+    {
+        _undoTimer?.Stop();
+        _lastDeleted.Clear();
+        UndoBar.Visibility = Visibility.Collapsed;
+        UpdateBulkBar();
+    }
+
+    // --- toplu seçim ---
+
+    private List<TodoItem> SelectedTasks() => List.SelectedItems.Cast<TodoItem>().ToList();
+
+    private void EnterSelectionMode()
+    {
+        HideUndo();
+        IsSelectionMode = true;
+        List.Focus();
+        UpdateBulkBar();
+    }
+
+    private void ExitSelectionMode()
+    {
+        IsSelectionMode = false;
+        List.UnselectAll();
+        UpdateBulkBar();
+    }
+
+    private void UpdateBulkBar()
+    {
+        int n = List.SelectedItems.Count;
+        BulkBar.Visibility = IsSelectionMode && UndoBar.Visibility != Visibility.Visible
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        BulkCountText.Text = n == 0 ? "Görev seç" : $"{n} görev seçili";
+        BulkDeleteButton.IsEnabled = n > 0;
+        BulkCompleteButton.IsEnabled = n > 0;
+        BulkCompleteText.Text = CurrentTab == Tab.Done ? "Geri al" : "Tamamla";
+
+        SelectModeText.Text = IsSelectionMode ? "Seçimi bitir" : "Seç";
+        SelectModeButton.Foreground = (Brush)FindResource(IsSelectionMode ? "AccentSoftText" : "TextMuted");
+
+        // yüzen çubuk son kartın üstünü kapatmasın
+        bool barShown = BulkBar.Visibility == Visibility.Visible || UndoBar.Visibility == Visibility.Visible;
+        List.Padding = new Thickness(0, 0, 0, barShown ? 70 : 0);
     }
 
     private void OpenStages(TodoItem item)
@@ -422,6 +514,8 @@ public partial class MainWindow : Window
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
         if (_view == null) return;
+        // başka sekmedeki seçim görünmez kalıp yanlışlıkla silinmesin
+        List.UnselectAll();
         RefreshAll();
     }
 
@@ -439,15 +533,85 @@ public partial class MainWindow : Window
         RefreshAll();
     }
 
-    // sağ tıklayınca o kart seçili olsun, yoksa menü başka kart seçiliymiş gibi görünüyor
+    // sağ tıklayınca o kart seçili olsun, yoksa menü başka kart seçiliymiş gibi görünüyor.
+    // çoklu seçim varken seçili bir karta sağ tıklanırsa seçimi bozmuyoruz
     private void Item_PreviewRightDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is ListBoxItem li) li.IsSelected = true;
+        if (sender is not ListBoxItem li || li.IsSelected) return;
+        if (!IsSelectionMode) List.UnselectAll();
+        li.IsSelected = true;
+    }
+
+    // seçim modunda karta tıklamak seçimi aç/kapa yapıyor (ctrl'ye basmaya gerek kalmasın)
+    private void Item_PreviewLeftDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!IsSelectionMode || sender is not ListBoxItem li) return;
+        li.IsSelected = !li.IsSelected;
+        li.Focus();
+        e.Handled = true;
+    }
+
+    private void List_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // ctrl/shift ile ikinci görev seçilince seçim modunu kendiliğinden aç
+        if (!IsSelectionMode && List.SelectedItems.Count > 1) EnterSelectionMode();
+        else UpdateBulkBar();
+    }
+
+    private void SelectMode_Click(object sender, RoutedEventArgs e)
+    {
+        if (IsSelectionMode) ExitSelectionMode();
+        else EnterSelectionMode();
+    }
+
+    private void BulkSelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        List.SelectAll();
+        List.Focus();
+    }
+
+    private void BulkComplete_Click(object sender, RoutedEventArgs e)
+    {
+        var items = SelectedTasks();
+        if (items.Count == 0) return;
+        // tamamlanan sekmesinde bu buton "geri al" oluyor
+        bool complete = CurrentTab != Tab.Done;
+        foreach (var item in items) SetCompleted(item, complete);
+        Save();
+        ExitSelectionMode();
+        RefreshAll();
+    }
+
+    private void BulkDelete_Click(object sender, RoutedEventArgs e) => DeleteItems(SelectedTasks());
+    private void BulkCancel_Click(object sender, RoutedEventArgs e) => ExitSelectionMode();
+
+    private void Undo_Click(object sender, RoutedEventArgs e)
+    {
+        var restored = _lastDeleted.ToList();
+        HideUndo();
+        foreach (var item in restored) _items.Add(item);
+        Save();
+        RefreshAll();
+        // tek görevse seçili gelsin ki nereye döndüğü belli olsun. çokluyu seçersek
+        // seçim modu kendiliğinden açılıyor, o da kafa karıştırıyor
+        if (restored.Count == 1) List.SelectedItem = restored[0];
+        if (restored.Count > 0) List.ScrollIntoView(restored[0]);
+    }
+
+    private void UndoClose_Click(object sender, RoutedEventArgs e) => HideUndo();
+
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && IsSelectionMode)
+        {
+            ExitSelectionMode();
+            e.Handled = true;
+        }
     }
 
     private void List_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left) return;
+        if (e.ChangedButton != MouseButton.Left || IsSelectionMode) return;
         var src = e.OriginalSource as DependencyObject;
         // tik yuvarlağına hızlı iki kere basınca düzenleme açılmasın
         if (src != null && FindAncestor<Button>(src) != null) return;
@@ -457,11 +621,17 @@ public partial class MainWindow : Window
 
     private void List_KeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Delete)
+        {
+            DeleteItems(SelectedTasks());
+            e.Handled = true;
+            return;
+        }
+
         if (List.SelectedItem is not TodoItem item) return;
         switch (e.Key)
         {
-            case Key.Delete: DeleteItem(item); e.Handled = true; break;
-            case Key.Enter: OpenEditor(item); e.Handled = true; break;
+            case Key.Enter when !IsSelectionMode: OpenEditor(item); e.Handled = true; break;
             case Key.C when Keyboard.Modifiers == ModifierKeys.Control: CopyItem(item); e.Handled = true; break;
         }
     }
@@ -521,7 +691,7 @@ public partial class MainWindow : Window
 
     private void MenuDelete_Click(object sender, RoutedEventArgs e)
     {
-        if (ItemOf(sender) is TodoItem item) DeleteItem(item);
+        if (ItemOf(sender) is TodoItem item) DeleteItems(new[] { item });
     }
 
     private static T? FindAncestor<T>(DependencyObject? d) where T : DependencyObject

@@ -6,7 +6,7 @@
         Title="ESN Görev Takip" Width="780" Height="700" MinWidth="560" MinHeight="440"
         Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
         FontFamily="Segoe UI" UseLayoutRounding="True"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="CenterScreen" PreviewKeyDown="Window_PreviewKeyDown"
         Icon="pack://application:,,,/GorevTakip;component/Assets/app.ico">
 
   <Window.InputBindings>
@@ -114,8 +114,16 @@
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
 
-          <Button Style="{StaticResource CheckCircle}" Click="Check_Click" VerticalAlignment="Top" Margin="0,1,14,0"
-                  ToolTip="Tamamlandı olarak işaretle"/>
+          <!-- normalde tamamla yuvarlağı, toplu seçim modunda onun yerine seçim kutusu görünüyor -->
+          <Grid VerticalAlignment="Top" Margin="0,1,14,0">
+            <Button x:Name="checkBtn" Style="{StaticResource CheckCircle}" Click="Check_Click"
+                    ToolTip="Tamamlandı olarak işaretle"/>
+            <Border x:Name="selBox" Width="20" Height="20" CornerRadius="5" BorderBrush="#5A5B66" BorderThickness="1.6"
+                    Background="Transparent" Visibility="Collapsed">
+              <TextBlock x:Name="selMark" Text="&#xE73E;" FontFamily="{StaticResource Icons}" FontSize="11" Foreground="White"
+                         HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+            </Border>
+          </Grid>
 
           <StackPanel Grid.Column="1">
             <TextBlock x:Name="title" Text="{Binding Title}" FontSize="14.5" FontWeight="SemiBold"
@@ -223,6 +231,21 @@
         <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
           <Setter TargetName="card" Property="BorderBrush" Value="{StaticResource Accent}"/>
         </DataTrigger>
+        <DataTrigger Binding="{Binding IsSelectionMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+          <Setter TargetName="checkBtn" Property="Visibility" Value="Collapsed"/>
+          <Setter TargetName="selBox" Property="Visibility" Value="Visible"/>
+          <Setter TargetName="cardRoot" Property="Cursor" Value="Hand"/>
+        </DataTrigger>
+        <MultiDataTrigger>
+          <MultiDataTrigger.Conditions>
+            <Condition Binding="{Binding IsSelectionMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+            <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True"/>
+          </MultiDataTrigger.Conditions>
+          <Setter TargetName="selBox" Property="Background" Value="{StaticResource Accent}"/>
+          <Setter TargetName="selBox" Property="BorderBrush" Value="{StaticResource Accent}"/>
+          <Setter TargetName="selMark" Property="Visibility" Value="Visible"/>
+          <Setter TargetName="card" Property="Background" Value="#1D2433"/>
+        </MultiDataTrigger>
       </DataTemplate.Triggers>
     </DataTemplate>
 
@@ -264,17 +287,27 @@
         <RadioButton x:Name="TabDone" Style="{StaticResource TabRadio}" GroupName="tabs"
                      Checked="Tab_Checked" Content="Tamamlanan"/>
       </StackPanel>
-      <TextBox x:Name="SearchBox" HorizontalAlignment="Right" Width="210" Padding="10,6" Tag="Ara…  (Ctrl+F)"
-               TextChanged="SearchBox_TextChanged"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button x:Name="SelectModeButton" Style="{StaticResource GhostBtn}" Padding="10,6" Margin="0,0,8,0"
+                Click="SelectMode_Click" ToolTip="Toplu seçim: birden fazla görevi seçip tamamla ya da sil (Ctrl+tık da olur)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE762;" FontFamily="{StaticResource Icons}" FontSize="13" VerticalAlignment="Center" Margin="0,1,7,0"/>
+            <TextBlock x:Name="SelectModeText" Text="Seç"/>
+          </StackPanel>
+        </Button>
+        <TextBox x:Name="SearchBox" Width="210" Padding="10,6" Tag="Ara…  (Ctrl+F)"
+                 TextChanged="SearchBox_TextChanged"/>
+      </StackPanel>
     </Grid>
 
-    <!-- liste -->
     <!-- etiket filtresi. çipleri kod tarafında dolduruyoruz, hiç etiket yoksa gizli -->
     <WrapPanel x:Name="LabelBar" Grid.Row="3" Margin="22,8,22,0" Visibility="Collapsed"/>
 
+    <!-- liste. Extended: ctrl/shift ile çoklu seçim ve ctrl+a çalışsın -->
     <ListBox x:Name="List" Grid.Row="4" Margin="22,8,10,0" Background="Transparent" BorderThickness="0"
              ItemTemplate="{StaticResource ItemTemplate}" HorizontalContentAlignment="Stretch"
              ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.ScrollUnit="Pixel"
+             SelectionMode="Extended" SelectionChanged="List_SelectionChanged"
              MouseDoubleClick="List_MouseDoubleClick" KeyDown="List_KeyDown">
       <ListBox.ItemContainerStyle>
         <Style TargetType="ListBoxItem">
@@ -290,6 +323,7 @@
             </Setter.Value>
           </Setter>
           <EventSetter Event="PreviewMouseRightButtonDown" Handler="Item_PreviewRightDown"/>
+          <EventSetter Event="PreviewMouseLeftButtonDown" Handler="Item_PreviewLeftDown"/>
         </Style>
       </ListBox.ItemContainerStyle>
     </ListBox>
@@ -303,6 +337,56 @@
       <TextBlock x:Name="EmptyHint" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" FontSize="12.5"/>
     </StackPanel>
 
+    <!-- toplu işlem çubuğu: seçim modunda listenin altında yüzüyor -->
+    <Border x:Name="BulkBar" Grid.Row="4" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,12"
+            Background="{StaticResource Surface2}" BorderBrush="{StaticResource BorderHover}" BorderThickness="1"
+            CornerRadius="12" Padding="8" Visibility="Collapsed">
+      <Border.Effect>
+        <DropShadowEffect BlurRadius="22" ShadowDepth="3" Opacity="0.55" Color="Black"/>
+      </Border.Effect>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="BulkCountText" VerticalAlignment="Center" Margin="10,0,16,0" FontWeight="SemiBold" MinWidth="110"/>
+        <Button Style="{StaticResource GhostBtn}" Click="BulkSelectAll_Click" Margin="0,0,4,0" ToolTip="Bu sekmede görünen tüm görevleri seç (Ctrl+A)">
+          <TextBlock Text="Tümünü seç"/>
+        </Button>
+        <Button x:Name="BulkCompleteButton" Click="BulkComplete_Click" Margin="0,0,6,0">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE73E;" FontFamily="{StaticResource Icons}" FontSize="11" Foreground="{StaticResource Success}"
+                       VerticalAlignment="Center" Margin="0,1,7,0"/>
+            <TextBlock x:Name="BulkCompleteText" Text="Tamamla"/>
+          </StackPanel>
+        </Button>
+        <Button x:Name="BulkDeleteButton" Style="{StaticResource DangerBtn}" Click="BulkDelete_Click" Margin="0,0,6,0"
+                ToolTip="Seçilenleri sil (Del)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE74D;" FontFamily="{StaticResource Icons}" FontSize="11" VerticalAlignment="Center" Margin="0,1,7,0"/>
+            <TextBlock Text="Sil"/>
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource GhostBtn}" Click="BulkCancel_Click" Padding="10,7" ToolTip="Seçimden çık (Esc)">
+          <TextBlock Text="&#xE711;" FontFamily="{StaticResource Icons}" FontSize="11"/>
+        </Button>
+      </StackPanel>
+    </Border>
+
+    <!-- silme sonrası "geri al" bildirimi -->
+    <Border x:Name="UndoBar" Grid.Row="4" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,12"
+            Background="{StaticResource Surface2}" BorderBrush="{StaticResource BorderHover}" BorderThickness="1"
+            CornerRadius="12" Padding="16,8,8,8" Visibility="Collapsed">
+      <Border.Effect>
+        <DropShadowEffect BlurRadius="22" ShadowDepth="3" Opacity="0.55" Color="Black"/>
+      </Border.Effect>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock Text="&#xE74D;" FontFamily="{StaticResource Icons}" FontSize="12" Foreground="{StaticResource TextMuted}"
+                   VerticalAlignment="Center" Margin="0,1,10,0"/>
+        <TextBlock x:Name="UndoText" VerticalAlignment="Center" Margin="0,0,18,0"/>
+        <Button Style="{StaticResource AccentBtn}" Click="Undo_Click" Padding="14,6" Content="Geri al"/>
+        <Button Style="{StaticResource GhostBtn}" Click="UndoClose_Click" Padding="10,7" Margin="4,0,0,0" ToolTip="Kapat">
+          <TextBlock Text="&#xE711;" FontFamily="{StaticResource Icons}" FontSize="11"/>
+        </Button>
+      </StackPanel>
+    </Border>
+
     <!-- alt bilgi çubuğu -->
     <Border Grid.Row="5" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}"
             BorderThickness="0,1,0,0" Padding="22,9" Margin="0,8,0,0">
@@ -313,7 +397,7 @@
           <TextBlock x:Name="NextText" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextFaint}" FontSize="12"
-                   Text="Sağ tık: seçenekler  ·  Çift tık: düzenle  ·  Ctrl+E: aşamalar"/>
+                   Text="Sağ tık: seçenekler  ·  Ctrl+tık: çoklu seçim  ·  Ctrl+E: aşamalar"/>
       </Grid>
     </Border>
   </Grid>

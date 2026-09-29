@@ -11,6 +11,7 @@ Müşteri takibi gibi "şu gün tekrar yazmam lazım" işleri unutmamak için ya
 - **Öncelik:** Normal / Yüksek / Acil. Acil işler listenin en üstünde durur ve renkli şeritle işaretlenir.
 - **Müşteri / etiket:** Her göreve bir müşteri adı ya da kategori verilebilir. Etiketler kartta renkli rozet olarak görünür; sekmelerin altındaki çiplerle ya da karttaki rozete tıklayarak listeyi o müşteriye göre süzebilirsin. Filtre açıkken eklenen yeni notlar etiketi otomatik alır.
 - **Sağ tık menüsü:** Tamamla, düzenle, aşama ekle, hatırlatıcı kur/kaldır, metni kopyala, sil.
+- **Toplu seçim:** "Seç" düğmesi, Ctrl+tık, Shift+tık ya da Ctrl+A ile birden fazla görev seçilip tek seferde tamamlanabilir, geri alınabilir ya da silinebilir. Silmeden önce onay istenir, sildikten sonra 10 saniye boyunca **Geri al** seçeneği görünür.
 - **Arama:** Başlık, not, etiket ve aşamalarda Türkçe karakter duyarlı arama.
 - **Sistem tepsisi:** Pencereyi kapatınca program saatin yanındaki simgeye iner ve hatırlatmalar için çalışmaya devam eder.
 - **Taşınabilir veri:** Tüm notlar exe'nin yanındaki `gorevler.json` dosyasına kaydedilir, USB ile birlikte taşınır.
@@ -24,7 +25,10 @@ Müşteri takibi gibi "şu gün tekrar yazmam lazım" işleri unutmamak için ya
 | `Ctrl+E` | Seçili görevin aşamaları |
 | `Ctrl+C` | Seçili görevi metin olarak kopyala |
 | `Enter` / çift tık | Düzenle |
-| `Del` | Sil |
+| `Ctrl+tık` / `Shift+tık` | Çoklu seçim |
+| `Ctrl+A` | Listedeki tüm görevleri seç |
+| `Del` | Seçili görev(ler)i sil |
+| `Esc` | Seçimden çık |
 | `Ctrl+Enter` | Düzenleme penceresinde kaydet, aşama penceresinde "yapıldı" olarak ekle |
 
 ## Geliştirme
