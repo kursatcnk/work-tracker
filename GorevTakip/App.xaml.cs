@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Threading;
 using System.Windows;
 using System.Windows.Markup;
+using GorevTakip.Helpers;
+using GorevTakip.Services;
 using GorevTakip.Views;
 
 namespace GorevTakip;
@@ -13,7 +15,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         // tarih/gün isimleri makine dili ne olursa olsun türkçe çıksın (datepicker dahil)
-        var tr = CultureInfo.GetCultureInfo("tr-TR");
+        var tr = Fmt.Tr;
         CultureInfo.DefaultThreadCurrentCulture = tr;
         CultureInfo.DefaultThreadCurrentUICulture = tr;
         Thread.CurrentThread.CurrentCulture = tr;
@@ -23,7 +25,9 @@ public partial class App : Application
 
         DispatcherUnhandledException += (_, ex) =>
         {
-            MessageBox.Show("Beklenmeyen bir hata oluştu:\n\n" + ex.Exception.Message,
+            Storage.Log(ex.Exception);
+            MessageBox.Show("Beklenmeyen bir hata oluştu:\n\n" + ex.Exception.Message +
+                            "\n\nAyrıntılar hata.log dosyasına yazıldı.",
                 "ESN Görev Takip", MessageBoxButton.OK, MessageBoxImage.Warning);
             ex.Handled = true;
         };

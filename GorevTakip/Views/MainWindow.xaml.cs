@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Windows;
 using GorevTakip.Helpers;
 
@@ -11,6 +10,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         SourceInitialized += (_, _) => NativeMethods.UseDarkTitleBar(this);
-        TodayText.Text = DateTime.Now.ToString("d MMMM yyyy, dddd", CultureInfo.GetCultureInfo("tr-TR"));
+        TodayText.Text = DateTime.Now.ToString("d MMMM yyyy, dddd", Fmt.Tr);
     }
 }
