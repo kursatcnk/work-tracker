@@ -1,7 +1,9 @@
-# ESN Görev Takip
+# WorkTracker — Görev Takip
 
 Kurulum gerektirmeyen, USB'den çift tıkla çalışan küçük bir görev ve hatırlatma uygulaması.
 Müşteri takibi gibi "şu gün tekrar yazmam lazım" işleri unutmamak için yazıldı.
+
+![WorkTracker ana ekranı](docs/screenshot.png)
 
 ## Özellikler
 
@@ -59,7 +61,7 @@ powershell -ExecutionPolicy Bypass -File tools\make-icon.ps1
 ```
 GorevTakip/
 ├─ Assets/      uygulama ikonu
-├─ Controls/    ESN logosu
+├─ Controls/    uygulama logosu
 ├─ Helpers/     tarih/saat biçimleme, koyu başlık çubuğu
 ├─ Models/      görev, aşama, öncelik
 ├─ Services/    json depolama, alarm sesi
@@ -71,5 +73,9 @@ tools/          yayınlama ve ikon scriptleri
 ## Notlar
 
 - Hatırlatmalar yalnızca program açıkken çalışır. Pencereyi kapatmak programı kapatmaz; tamamen çıkmak için tepsideki simgeye sağ tıklayıp **Çıkış**'ı seç.
-- Bazı şirket bilgisayarları imzasız exe'leri engelleyebilir (SmartScreen / AppLocker).
+- Bazı kurumsal bilgisayarlar imzasız exe'leri engelleyebilir (SmartScreen / AppLocker).
 - Aynı anda yalnızca bir kopya çalışır; ikinci kez açmaya çalışınca açık olan pencere öne gelir.
+
+## Lisans
+
+[MIT](LICENSE)
