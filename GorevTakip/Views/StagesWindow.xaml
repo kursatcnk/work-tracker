@@ -43,7 +43,7 @@
   </Window.Resources>
 
   <StackPanel Margin="22,18,22,20">
-    <TextBlock Text="AŞAMALAR" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource EsnBlue}"/>
+    <TextBlock Text="AŞAMALAR" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource BrandBlue}"/>
     <TextBlock x:Name="TaskTitle" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0"/>
 
     <TextBlock x:Name="SummaryText" Foreground="{StaticResource TextMuted}" FontSize="12.5" Margin="0,14,0,6"/>

@@ -24,10 +24,10 @@
   <SolidColorBrush x:Key="Warning" Color="#F2B44B"/>
   <SolidColorBrush x:Key="WarningSoft" Color="#3A2F1A"/>
 
-  <!-- esnweb logosundaki renkler -->
-  <Color x:Key="EsnCyanColor">#00C8FC</Color>
-  <Color x:Key="EsnBlueColor">#2B7BFF</Color>
-  <SolidColorBrush x:Key="EsnBlue" Color="#3A8DFF"/>
+  <!-- logo ve vurgu renkleri -->
+  <Color x:Key="BrandCyanColor">#00C8FC</Color>
+  <Color x:Key="BrandBlueColor">#2B7BFF</Color>
+  <SolidColorBrush x:Key="BrandBlue" Color="#3A8DFF"/>
 
   <FontFamily x:Key="Icons">Segoe MDL2 Assets</FontFamily>
 

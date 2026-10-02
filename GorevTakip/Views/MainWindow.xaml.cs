@@ -302,7 +302,7 @@ public partial class MainWindow : Window
         if (_tray != null)
         {
             // NotifyIcon.Text 63 karakterden uzun olunca exception atıyor
-            var text = next == null ? "ESN Görev Takip" : $"ESN Görev Takip – sonraki: {Fmt.Friendly(next.ReminderAt!.Value)}";
+            var text = next == null ? "WorkTracker" : $"WorkTracker – sonraki: {Fmt.Friendly(next.ReminderAt!.Value)}";
             _tray.Text = text.Length > 63 ? text[..63] : text;
         }
     }
@@ -728,7 +728,7 @@ public partial class MainWindow : Window
         _tray = new System.Windows.Forms.NotifyIcon
         {
             Icon = icon ?? System.Drawing.SystemIcons.Application,
-            Text = "ESN Görev Takip",
+            Text = "WorkTracker",
             Visible = true,
         };
 
@@ -765,7 +765,7 @@ public partial class MainWindow : Window
             if (!_trayHintShown && _tray != null)
             {
                 _trayHintShown = true;
-                _tray.ShowBalloonTip(5000, "ESN Görev Takip arka planda çalışıyor",
+                _tray.ShowBalloonTip(5000, "WorkTracker arka planda çalışıyor",
                     "Hatırlatmalar için açık kalıyor. Tamamen kapatmak için saat yanındaki simgeye sağ tıklayıp Çıkış'ı seç.",
                     System.Windows.Forms.ToolTipIcon.Info);
             }

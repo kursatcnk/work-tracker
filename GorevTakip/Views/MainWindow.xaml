@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:GorevTakip.Controls"
         xmlns:local="clr-namespace:GorevTakip.Views"
-        Title="ESN Görev Takip" Width="780" Height="700" MinWidth="560" MinHeight="440"
+        Title="WorkTracker" Width="780" Height="700" MinWidth="560" MinHeight="440"
         Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
         FontFamily="Segoe UI" UseLayoutRounding="True"
         WindowStartupLocation="CenterScreen" PreviewKeyDown="Window_PreviewKeyDown"
@@ -46,7 +46,7 @@
       </MenuItem>
       <MenuItem Click="MenuStages_Click" InputGestureText="Ctrl+E">
         <MenuItem.Icon>
-          <TextBlock Text="&#xE8FD;" Style="{StaticResource MenuIcon}" Foreground="{StaticResource EsnBlue}"/>
+          <TextBlock Text="&#xE8FD;" Style="{StaticResource MenuIcon}" Foreground="{StaticResource BrandBlue}"/>
         </MenuItem.Icon>
         <MenuItem.Style>
           <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
@@ -142,7 +142,7 @@
                 <Border CornerRadius="5" Padding="7,3" Background="{StaticResource Surface2}" Margin="0,0,8,0">
                   <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE8FD;" FontFamily="{StaticResource Icons}" FontSize="11"
-                               Foreground="{StaticResource EsnBlue}" VerticalAlignment="Center" Margin="0,1,6,0"/>
+                               Foreground="{StaticResource BrandBlue}" VerticalAlignment="Center" Margin="0,1,6,0"/>
                     <TextBlock Text="{Binding StageProgressText}" FontSize="12" FontWeight="SemiBold"
                                Foreground="{StaticResource Text}"/>
                   </StackPanel>
@@ -263,7 +263,7 @@
 
     <!-- üst kısım -->
     <Grid Margin="22,18,22,0">
-      <controls:EsnLogo x:Name="Logo" HorizontalAlignment="Left"/>
+      <controls:AppLogo x:Name="Logo" HorizontalAlignment="Left"/>
       <Button HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource AccentBtn}"
               Click="NewButton_Click" ToolTip="Yeni not (Ctrl+N)" Padding="16,8">
         <StackPanel Orientation="Horizontal">

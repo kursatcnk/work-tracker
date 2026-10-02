@@ -1,0 +1,31 @@
+<UserControl x:Class="GorevTakip.Controls.AppLogo"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Resources>
+    <LinearGradientBrush x:Key="MarkFill" StartPoint="0,0" EndPoint="1,1">
+      <GradientStop Color="{StaticResource BrandCyanColor}" Offset="0"/>
+      <GradientStop Color="{StaticResource BrandBlueColor}" Offset="1"/>
+    </LinearGradientBrush>
+  </UserControl.Resources>
+
+  <StackPanel Orientation="Horizontal">
+    <!-- 100x100'lük koordinatta çizip viewbox ile ölçekliyoruz; tools/make-icon.ps1 aynı sayıları kullanıyor -->
+    <Viewbox Width="46" Height="46" VerticalAlignment="Center">
+      <Canvas Width="100" Height="100">
+        <Rectangle Canvas.Left="6" Canvas.Top="6" Width="88" Height="88" RadiusX="24" RadiusY="24" Fill="{StaticResource MarkFill}"/>
+        <!-- tik işareti -->
+        <Path Stroke="White" StrokeThickness="10" StrokeLineJoin="Round"
+              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+              Data="M29,52 L44,67 L72,36"/>
+      </Canvas>
+    </Viewbox>
+
+    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+      <TextBlock FontSize="22" VerticalAlignment="Center">
+        <Run Text="Work" FontWeight="Black" Foreground="{StaticResource BrandBlue}"/><Run Text="Tracker" FontWeight="Normal"
+             Foreground="{StaticResource Text}"/>
+      </TextBlock>
+      <TextBlock x:Name="SubtitleText" Foreground="{StaticResource TextMuted}" FontSize="12.5" Margin="1,1,0,0"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

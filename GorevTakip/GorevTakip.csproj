@@ -10,7 +10,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>GorevTakip</AssemblyName>
     <RootNamespace>GorevTakip</RootNamespace>
-    <Product>ESN Görev Takip</Product>
+    <Product>WorkTracker</Product>
     <Version>1.0.0</Version>
     <SatelliteResourceLanguages>tr;en</SatelliteResourceLanguages>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>

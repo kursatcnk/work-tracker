@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace GorevTakip.Controls;
 
-public partial class EsnLogo : UserControl
+public partial class AppLogo : UserControl
 {
-    public EsnLogo()
+    public AppLogo()
     {
         InitializeComponent();
     }

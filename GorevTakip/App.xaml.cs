@@ -44,7 +44,7 @@ public partial class App : Application
             Storage.Log(ex.Exception);
             MessageBox.Show("Beklenmeyen bir hata oluştu:\n\n" + ex.Exception.Message +
                             "\n\nAyrıntılar hata.log dosyasına yazıldı.",
-                "ESN Görev Takip", MessageBoxButton.OK, MessageBoxImage.Warning);
+                "WorkTracker", MessageBoxButton.OK, MessageBoxImage.Warning);
             ex.Handled = true;
         };
 

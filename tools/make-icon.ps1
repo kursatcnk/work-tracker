@@ -1,5 +1,5 @@
 # uygulama ikonunu (GorevTakip/Assets/app.ico) üretir.
-# EsnLogo.xaml'daki altıgen + E çiziminin aynısı, ikon değişecekse ikisini birlikte güncelle
+# AppLogo.xaml'daki yuvarlak kare + tik çiziminin aynısı, ikon değişecekse ikisini birlikte güncelle
 param([string]$Out = (Join-Path $PSScriptRoot '..\GorevTakip\Assets\app.ico'))
 
 Add-Type -AssemblyName System.Drawing
@@ -14,42 +14,29 @@ function New-IconPng([int]$s) {
 
     $cyan = [System.Drawing.Color]::FromArgb(255, 0, 200, 252)
     $blue = [System.Drawing.Color]::FromArgb(255, 43, 123, 255)
-    $bounds = [System.Drawing.RectangleF]::new(0, 0, 100, 100)
+    $bounds = [System.Drawing.RectangleF]::new(6, 6, 88, 88)
 
-    foreach ($half in @(
-            @{ Pts = @(@(50, 5), @(11, 27.5), @(11, 72.5), @(50, 95)); Top = $cyan; Bottom = $blue },
-            @{ Pts = @(@(50, 5), @(89, 27.5), @(89, 72.5), @(50, 95)); Top = $blue; Bottom = $cyan })) {
-        $pts = [System.Drawing.PointF[]]($half.Pts | ForEach-Object { [System.Drawing.PointF]::new($_[0], $_[1]) })
-        $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush $bounds, $half.Top, $half.Bottom, ([single]90)
-        $g.FillPolygon($brush, $pts)
-        $pen = New-Object System.Drawing.Pen $brush, ([single]9)
-        $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
-        $g.DrawPolygon($pen, $pts)
-    }
-
-    # beyaz yuvarlak köşeli blok
+    # sol üstten sağ alta renk geçişli, yuvarlak köşeli kare
     $path = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $x = 28; $y = 27; $w = 43; $h = 46; $d = 22
+    $x = 6; $y = 6; $w = 88; $h = 88; $d = 48
     $path.AddArc($x, $y, $d, $d, 180, 90)
     $path.AddArc($x + $w - $d, $y, $d, $d, 270, 90)
     $path.AddArc($x + $w - $d, $y + $h - $d, $d, $d, 0, 90)
     $path.AddArc($x, $y + $h - $d, $d, $d, 90, 90)
     $path.CloseFigure()
-    $g.FillPath([System.Drawing.Brushes]::White, $path)
+    $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush $bounds, $cyan, $blue, ([single]45)
+    $g.FillPath($brush, $path)
 
-    # oklar. 32px altında seçilmiyor, küçük boyutta biraz kalınlaştırıyoruz
-    $arrowWidth = if ($s -lt 32) { 8 } else { 5.5 }
-    $pen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(255, 45, 134, 255)), ([single]$arrowWidth)
+    # tik. 32px altında ince kalıyor, küçük boyutta biraz kalınlaştırıyoruz
+    $tickWidth = if ($s -lt 32) { 13 } else { 10 }
+    $pen = New-Object System.Drawing.Pen ([System.Drawing.Color]::White), ([single]$tickWidth)
     $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
     $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
     $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
-    foreach ($cy in 42, 58) {
-        $g.DrawLine($pen, 73, $cy, 44, $cy)
-        $g.DrawLines($pen, [System.Drawing.PointF[]]@(
-                [System.Drawing.PointF]::new(50, $cy - 5.5),
-                [System.Drawing.PointF]::new(44, $cy),
-                [System.Drawing.PointF]::new(50, $cy + 5.5)))
-    }
+    $g.DrawLines($pen, [System.Drawing.PointF[]]@(
+            [System.Drawing.PointF]::new(29, 52),
+            [System.Drawing.PointF]::new(44, 67),
+            [System.Drawing.PointF]::new(72, 36)))
     $g.Dispose()
 
     $ms = New-Object System.IO.MemoryStream

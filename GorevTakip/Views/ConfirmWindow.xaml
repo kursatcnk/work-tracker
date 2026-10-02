@@ -1,7 +1,7 @@
 <Window x:Class="GorevTakip.Views.ConfirmWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ESN Görev Takip" Width="420" SizeToContent="Height" ResizeMode="NoResize"
+        Title="WorkTracker" Width="420" SizeToContent="Height" ResizeMode="NoResize"
         Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
         FontFamily="Segoe UI" UseLayoutRounding="True" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
