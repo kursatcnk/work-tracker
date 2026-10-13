@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- sadece tray ikonu (NotifyIcon) için, wpf'in kendi tray desteği yok -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>WorkTracker</AssemblyName>
+    <RootNamespace>WorkTracker</RootNamespace>
+    <Product>WorkTracker</Product>
+    <Version>1.0.0</Version>
+    <SatelliteResourceLanguages>tr;en</SatelliteResourceLanguages>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- pencere ve tray ikonu için exe'nin içine gömülüyor. yeniden üretmek: tools/make-icon.ps1 -->
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
-# uygulama ikonunu (GorevTakip/Assets/app.ico) üretir.
+# uygulama ikonunu (WorkTracker/Assets/app.ico) üretir.
 # AppLogo.xaml'daki yuvarlak kare + tik çiziminin aynısı, ikon değişecekse ikisini birlikte güncelle
-param([string]$Out = (Join-Path $PSScriptRoot '..\GorevTakip\Assets\app.ico'))
+param([string]$Out = (Join-Path $PSScriptRoot '..\WorkTracker\Assets\app.ico'))
 
 Add-Type -AssemblyName System.Drawing
 

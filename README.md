@@ -39,7 +39,7 @@ Gereksinim: .NET 10 SDK (Windows)
 
 ```powershell
 dotnet build
-dotnet run --project GorevTakip
+dotnet run --project WorkTracker
 ```
 
 ### USB için exe üretmek
@@ -48,7 +48,7 @@ dotnet run --project GorevTakip
 powershell -ExecutionPolicy Bypass -File tools\publish.ps1
 ```
 
-Çıktı: `publish/GorevTakip.exe` (tek dosya, ~65 MB, .NET kurulumu gerektirmez).
+Çıktı: `publish/WorkTracker.exe` (tek dosya, ~65 MB, .NET kurulumu gerektirmez).
 
 ### İkonu yeniden üretmek
 
@@ -59,7 +59,7 @@ powershell -ExecutionPolicy Bypass -File tools\make-icon.ps1
 ## Proje yapısı
 
 ```
-GorevTakip/
+WorkTracker/
 ├─ Assets/      uygulama ikonu
 ├─ Controls/    uygulama logosu
 ├─ Helpers/     tarih/saat biçimleme, koyu başlık çubuğu
